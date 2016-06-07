@@ -134,15 +134,18 @@ public class HostChangesTest {
     @Test
     public void testHostUpWithOldConAfterDown() throws Exception {
         thrown.expect(NoHostAvailableException.class);
-        thrown.expectMessage("Connection has been closed");
 
         server.unregister(AbstractServerFactory.THRIFT_RPC);
         server.register(new EchoServiceImpl(), AbstractServerFactory.THRIFT_RPC);
 
-        assertThat(TestUtils.findHost(CBUtil.THRIFT_PROTO, new InetSocketAddress(InetAddress.getLocalHost(), AbstractServerFactory.newFactory(AbstractServerFactory.THRIFT_RPC).getDefaultPort())).isUp(), equalTo(true));
+        // wait until onDown is triggered
+        Thread.sleep(200);
+        assertThat(TestUtils.findHost(CBUtil.THRIFT_PROTO, new InetSocketAddress(InetAddress.getLocalHost(), AbstractServerFactory.newFactory(AbstractServerFactory.THRIFT_RPC).getDefaultPort())).isUp(), equalTo(false));
         Pair<HistoryPolicy.Action, Host> h1 = Pair.create(HistoryPolicy.Action.INIT,
                 new Host(Pair.create(ThriftUtils.getServiceName(Echo.Iface.class), CBUtil.THRIFT_PROTO), new InetSocketAddress(InetAddress.getLocalHost(), AbstractServerFactory.newFactory(AbstractServerFactory.THRIFT_RPC).getDefaultPort())));
-        assertThat(historyPolicy.history, Matchers.contains(h1));
+        Pair<HistoryPolicy.Action, Host> h2 = Pair.create(HistoryPolicy.Action.DOWN,
+                new Host(Pair.create(ThriftUtils.getServiceName(Echo.Iface.class), CBUtil.THRIFT_PROTO), new InetSocketAddress(InetAddress.getLocalHost(), AbstractServerFactory.newFactory(AbstractServerFactory.THRIFT_RPC).getDefaultPort())));
+        assertThat(historyPolicy.history, Matchers.contains(h1, h2));
 
         echoService.echoReturnString("yw", "bll");
     }
