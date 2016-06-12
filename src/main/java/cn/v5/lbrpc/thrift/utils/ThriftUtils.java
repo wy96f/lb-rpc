@@ -73,12 +73,13 @@ public class ThriftUtils {
     }
 
     public static Class<?> getResultClass(Method method) {
-        Class<?> genInterface = method.getDeclaringClass();
-        Class<?> outClass = genInterface.getEnclosingClass();
+        Class<?> genInterface = method.getDeclaringClass(); // get the Iface class
+        Class<?> outClass = genInterface.getEnclosingClass(); // get the thrift gen class
 
         Preconditions.checkNotNull(genInterface, "class " + genInterface.getClass() + " not in the thrift gen class");
 
         String resultClassName = method.getName() + "_result";
+        // get the method_result class
         for (Class<?> declaredClasses : outClass.getDeclaredClasses()) {
             if (declaredClasses.getSimpleName().compareTo(resultClassName) == 0) {
                 return declaredClasses;
