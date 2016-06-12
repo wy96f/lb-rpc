@@ -116,6 +116,14 @@ public class RpcProxyFactory {
         }
 
         public <T> T create(Class<T> clazz, String proto) throws Exception {
+            return create(clazz, proto, false);
+        }
+
+        public <T> T createAsync(Class<T> clazz, String proto) throws Exception {
+            return create(clazz, proto, true);
+        }
+
+        public <T> T create(Class<T> clazz, String proto, boolean async) throws Exception {
             Preconditions.checkArgument(supports.contains(proto), "proto " + proto + " not supported");
             Preconditions.checkNotNull(sd, "service discovery must not be null");
 
@@ -129,11 +137,14 @@ public class RpcProxyFactory {
                 }
 
                 if (proto.compareTo(CBUtil.HTTP_PROTO) == 0) {
+                    if (async) throw new UnsupportedOperationException("Http not support async proxy");
                     return new ProxyBuilder<T>(clazz, nodeClient).buildHttp(getLoadBalancingPolicy());
                 } else if (proto.compareTo(CBUtil.PROTOBUF_PROTO) == 0) {
-                    return new ProxyBuilder<T>(clazz, nodeClient).buildProtobuf(getLoadBalancingPolicy());
+                    if (async) return new ProxyBuilder<T>(clazz, nodeClient).buildProtobufAsync(getLoadBalancingPolicy());
+                    else return new ProxyBuilder<T>(clazz, nodeClient).buildProtobuf(getLoadBalancingPolicy());
                 } else {
-                    return new ProxyBuilder<T>(clazz, nodeClient).buildThrift(getLoadBalancingPolicy());
+                    if (async) return new ProxyBuilder<T>(clazz, nodeClient).buildThriftAsync(getLoadBalancingPolicy());
+                    else return new ProxyBuilder<T>(clazz, nodeClient).buildThrift(getLoadBalancingPolicy());
                 }
             }
         }

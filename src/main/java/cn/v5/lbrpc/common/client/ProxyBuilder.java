@@ -31,6 +31,14 @@ public class ProxyBuilder<T> {
         return new SyncRpcProxy<T, ThriftMessage, ThriftMessage>(nodeClient, new ThriftRpcProxy<T>(nodeClient, iface, loadBalancingPolicy)).proxy();
     }
 
+    public T buildProtobufAsync(LoadBalancingPolicy loadBalancingPolicy) throws Exception {
+        return new AsyncRpcProxy<T, ProtobufMessage, ProtobufMessage>(nodeClient, new ProtobufRpcProxy<T>(nodeClient, iface, loadBalancingPolicy)).proxy();
+    }
+
+    public T buildThriftAsync(LoadBalancingPolicy loadBalancingPolicy) throws Exception {
+        return new AsyncRpcProxy<T, ThriftMessage, ThriftMessage>(nodeClient, new ThriftRpcProxy<T>(nodeClient, iface, loadBalancingPolicy)).proxy();
+    }
+
     // TODO sync or async rpc proxy
     public T buildHttp(LoadBalancingPolicy loadBalancingPolicy) throws Exception {
         return new HttpRpcProxy<T>(nodeClient, iface, loadBalancingPolicy).proxy();
