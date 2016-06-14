@@ -3,6 +3,7 @@ package cn.v5.lbrpc.common.client;
 import cn.v5.lbrpc.common.client.core.AbstractNodeClient;
 import cn.v5.lbrpc.common.data.IRequest;
 import cn.v5.lbrpc.common.data.IResponse;
+import com.google.common.base.Defaults;
 import com.google.common.util.concurrent.Futures;
 
 import java.lang.reflect.Method;
@@ -24,6 +25,10 @@ public class AsyncRpcProxy<T, V extends IRequest, S extends IResponse> extends A
         } else {
             RpcContext.getContext().setResult(Futures.immediateFuture(res));
         }
-        return null;
+        if (method.getGenericReturnType() instanceof Class) {
+            return Defaults.defaultValue(method.getReturnType());
+        } else {
+            return null;
+        }
     }
 }
