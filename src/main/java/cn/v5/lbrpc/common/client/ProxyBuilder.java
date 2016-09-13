@@ -23,24 +23,24 @@ public class ProxyBuilder<T> {
         this.loader = iface.getClassLoader();
     }
 
-    public T buildProtobuf(LoadBalancingPolicy loadBalancingPolicy) throws Exception {
-        return new SyncRpcProxy<T, ProtobufMessage, ProtobufMessage>(nodeClient, new ProtobufRpcProxy<T>(nodeClient, iface, loadBalancingPolicy)).proxy();
+    public T buildProtobuf(LoadBalancingPolicy loadBalancingPolicy, ISample sample) throws Exception {
+        return new SyncRpcProxy<T, ProtobufMessage, ProtobufMessage>(nodeClient, new ProtobufRpcProxy<T>(nodeClient, iface, loadBalancingPolicy), sample).proxy();
     }
 
-    public T buildThrift(LoadBalancingPolicy loadBalancingPolicy) throws Exception {
-        return new SyncRpcProxy<T, ThriftMessage, ThriftMessage>(nodeClient, new ThriftRpcProxy<T>(nodeClient, iface, loadBalancingPolicy)).proxy();
+    public T buildThrift(LoadBalancingPolicy loadBalancingPolicy, ISample sample) throws Exception {
+        return new SyncRpcProxy<T, ThriftMessage, ThriftMessage>(nodeClient, new ThriftRpcProxy<T>(nodeClient, iface, loadBalancingPolicy), sample).proxy();
     }
 
-    public T buildProtobufAsync(LoadBalancingPolicy loadBalancingPolicy) throws Exception {
-        return new AsyncRpcProxy<T, ProtobufMessage, ProtobufMessage>(nodeClient, new ProtobufRpcProxy<T>(nodeClient, iface, loadBalancingPolicy)).proxy();
+    public T buildProtobufAsync(LoadBalancingPolicy loadBalancingPolicy, ISample sample) throws Exception {
+        return new AsyncRpcProxy<T, ProtobufMessage, ProtobufMessage>(nodeClient, new ProtobufRpcProxy<T>(nodeClient, iface, loadBalancingPolicy), sample).proxy();
     }
 
-    public T buildThriftAsync(LoadBalancingPolicy loadBalancingPolicy) throws Exception {
-        return new AsyncRpcProxy<T, ThriftMessage, ThriftMessage>(nodeClient, new ThriftRpcProxy<T>(nodeClient, iface, loadBalancingPolicy)).proxy();
+    public T buildThriftAsync(LoadBalancingPolicy loadBalancingPolicy, ISample sample) throws Exception {
+        return new AsyncRpcProxy<T, ThriftMessage, ThriftMessage>(nodeClient, new ThriftRpcProxy<T>(nodeClient, iface, loadBalancingPolicy), sample).proxy();
     }
 
     // TODO sync or async rpc proxy
-    public T buildHttp(LoadBalancingPolicy loadBalancingPolicy) throws Exception {
+    public T buildHttp(LoadBalancingPolicy loadBalancingPolicy, ISample sample) throws Exception {
         return new HttpRpcProxy<T>(nodeClient, iface, loadBalancingPolicy).proxy();
     }
 }

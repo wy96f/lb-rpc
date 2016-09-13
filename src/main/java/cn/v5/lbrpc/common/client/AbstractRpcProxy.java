@@ -24,9 +24,12 @@ public abstract class AbstractRpcProxy<T, V extends IRequest, S extends IRespons
 
     private final AbstractNodeClient<V, S> nodeClient;
 
-    public AbstractRpcProxy(AbstractNodeClient<V, S> nodeClient, IProxy<T, V> proxyImpl) {
+    protected final ISample sample;
+
+    public AbstractRpcProxy(AbstractNodeClient<V, S> nodeClient, IProxy<T, V> proxyImpl, ISample sample) {
         this.proxyImpl = proxyImpl;
         this.nodeClient = nodeClient;
+        this.sample = sample;
     }
 
     public abstract Object invoke(Object proxy, Method method, Object[] args) throws Throwable;

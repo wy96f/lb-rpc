@@ -89,6 +89,7 @@ public class RpcProxyFactory {
         public ReconnectionPolicy reconnectionPolicy;
         public PoolOptions poolOptions;
         public SocketOptions socketOptions;
+        public ISample sample;
 
         public RpcProxyFactoryBuilder withServiceDiscovery(ServiceDiscovery sd) {
             this.sd = sd;
@@ -115,6 +116,11 @@ public class RpcProxyFactory {
             return this;
         }
 
+        public RpcProxyFactoryBuilder withSample(ISample sample) {
+            this.sample = sample;
+            return this;
+        }
+
         public <T> T create(Class<T> clazz, String proto) throws Exception {
             return create(clazz, proto, false);
         }
@@ -138,19 +144,23 @@ public class RpcProxyFactory {
 
                 if (proto.compareTo(CBUtil.HTTP_PROTO) == 0) {
                     if (async) throw new UnsupportedOperationException("Http not support async proxy");
-                    return new ProxyBuilder<T>(clazz, nodeClient).buildHttp(getLoadBalancingPolicy());
+                    return new ProxyBuilder<T>(clazz, nodeClient).buildHttp(getLoadBalancingPolicy(), getSample());
                 } else if (proto.compareTo(CBUtil.PROTOBUF_PROTO) == 0) {
-                    if (async) return new ProxyBuilder<T>(clazz, nodeClient).buildProtobufAsync(getLoadBalancingPolicy());
-                    else return new ProxyBuilder<T>(clazz, nodeClient).buildProtobuf(getLoadBalancingPolicy());
+                    if (async) return new ProxyBuilder<T>(clazz, nodeClient).buildProtobufAsync(getLoadBalancingPolicy(), getSample());
+                    else return new ProxyBuilder<T>(clazz, nodeClient).buildProtobuf(getLoadBalancingPolicy(), getSample());
                 } else {
-                    if (async) return new ProxyBuilder<T>(clazz, nodeClient).buildThriftAsync(getLoadBalancingPolicy());
-                    else return new ProxyBuilder<T>(clazz, nodeClient).buildThrift(getLoadBalancingPolicy());
+                    if (async) return new ProxyBuilder<T>(clazz, nodeClient).buildThriftAsync(getLoadBalancingPolicy(), getSample());
+                    else return new ProxyBuilder<T>(clazz, nodeClient).buildThrift(getLoadBalancingPolicy(), getSample());
                 }
             }
         }
 
         protected LoadBalancingPolicy getLoadBalancingPolicy() {
             return loadBalancingPolicy == null ? new RoundRobinPolicy() : loadBalancingPolicy;
+        }
+
+        protected ISample getSample() {
+            return sample == null ? new NoSample() : sample;
         }
 
         protected Configuration getConfiguration() {
