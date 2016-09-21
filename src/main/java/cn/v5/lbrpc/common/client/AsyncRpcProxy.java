@@ -12,8 +12,8 @@ import java.lang.reflect.Method;
  * Created by yangwei on 15-6-29.
  */
 public class AsyncRpcProxy<T, V extends IRequest, S extends IResponse> extends AbstractRpcProxy<T, V, S> {
-    public AsyncRpcProxy(AbstractNodeClient<V, S> abstractNodeClient, IProxy<T, V> proxyImpl, ISample sample) {
-        super(abstractNodeClient, proxyImpl, sample);
+    public AsyncRpcProxy(AbstractNodeClient<V, S> abstractNodeClient, IProxy<T, V> proxyImpl) {
+        super(abstractNodeClient, proxyImpl);
         proxyImpl.setInvocationProxy(this);
     }
 
