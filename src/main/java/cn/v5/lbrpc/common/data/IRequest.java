@@ -5,4 +5,7 @@ package cn.v5.lbrpc.common.data;
  */
 public interface IRequest {
     public void setStreamId(int id);
+    public void setHeader(String key, String value);
+    public String getService();
+    public String getMethod();
 }

@@ -111,6 +111,16 @@ public class ProtobufMessage implements Readable, Writerable, Cloneable, IRespon
     }
 
     @Override
+    public String getService() {
+        return request.getSerivceName();
+    }
+
+    @Override
+    public String getMethod() {
+        return request.getMethodName();
+    }
+
+    @Override
     public int getStreamId() {
         return streamId;
     }
@@ -125,10 +135,6 @@ public class ProtobufMessage implements Readable, Writerable, Cloneable, IRespon
         if (ErrCodes.isSuccess(response.getErrorCode())) {
             AbstractRpcMethodInfo abstractRpcMethodInfo = resultFuture.getAbstractRpcMethodInfo();
             resultFuture.set(abstractRpcMethodInfo.outputDecode(data));
-        } else if (ErrCodes.ST_SERVICE_NOTFOUND == response.getErrorCode().intValue()) {
-            logger.warn("{}, doing retry", response.getErrorText());
-            resultFuture.getHandler().logError(connection.address, new RpcException(response.getErrorText()));
-            return true;
         } else {
             resultFuture.setException(new RpcException(String.format("Unexpected error occurred server side on %s: %d %s",
                     connection.address, response.getErrorCode(), response.getErrorText())));
@@ -157,6 +163,11 @@ public class ProtobufMessage implements Readable, Writerable, Cloneable, IRespon
         setResponse(message.getResponse());
         setStreamId(message.getStreamId());
         setData(message.getData());
+    }
+
+    @Override
+    public void setHeader(String key, String value) {
+
     }
 
     @Override

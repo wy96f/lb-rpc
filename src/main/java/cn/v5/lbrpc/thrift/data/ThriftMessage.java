@@ -4,7 +4,6 @@ import cn.v5.lbrpc.common.client.AbstractRpcMethodInfo;
 import cn.v5.lbrpc.common.client.core.Connection;
 import cn.v5.lbrpc.common.client.core.DefaultResultFuture;
 import cn.v5.lbrpc.common.client.core.exceptions.RpcException;
-import cn.v5.lbrpc.common.client.core.exceptions.RpcInternalError;
 import cn.v5.lbrpc.common.data.IRequest;
 import cn.v5.lbrpc.common.data.IResponse;
 import cn.v5.lbrpc.common.data.Readable;
@@ -28,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Created by yangwei on 15-6-23.
@@ -41,8 +42,10 @@ public class ThriftMessage implements Readable, Writerable, Cloneable, IResponse
     private int streamId;
     private TBase args;
     private byte[] result;
+    private Map<String, String> header;
 
     public ThriftMessage() {
+
     }
 
     public ThriftMessage(String serviceName, String methodName, byte msgType) {
@@ -77,6 +80,16 @@ public class ThriftMessage implements Readable, Writerable, Cloneable, IResponse
     }
 
     @Override
+    public String getService() {
+        return serviceName;
+    }
+
+    @Override
+    public String getMethod() {
+        return methodName;
+    }
+
+    @Override
     public int getStreamId() {
         return streamId;
     }
@@ -89,14 +102,8 @@ public class ThriftMessage implements Readable, Writerable, Cloneable, IResponse
     @Override
     public boolean onResponse(Connection connection, DefaultResultFuture resultFuture) throws IOException {
         if (x != null) {
-            if (x.getType() == TApplicationException.UNKNOWN_METHOD) {
-                logger.warn("{}, doing retry", x.getMessage());
-                resultFuture.getHandler().logError(connection.address, new RpcException(x.getMessage()));
-                return true;
-            } else {
-                resultFuture.setException(new RpcException(String.format("Unexpected error occurred server side on %s",
+            resultFuture.setException(new RpcException(String.format("Unexpected error occurred server side on %s",
                         connection.address), x));
-            }
         } else {
             AbstractRpcMethodInfo abstractRpcMethodInfo = resultFuture.getAbstractRpcMethodInfo();
             Object res = abstractRpcMethodInfo.outputDecode(result);
@@ -133,6 +140,12 @@ public class ThriftMessage implements Readable, Writerable, Cloneable, IResponse
     }
 
     @Override
+    public void setHeader(String key, String value) {
+        if (header == null) header = new HashMap<>();
+        header.put(key, value);
+    }
+
+    @Override
     public String toString() {
         if (msgType == TMessageType.CALL) {
             return String.format("Request %s.%s for %d", serviceName, methodName, getStreamId());
@@ -149,23 +162,28 @@ public class ThriftMessage implements Readable, Writerable, Cloneable, IResponse
             ByteBuf body = CBUtil.allocator.buffer(encodedMsg.length);
             body.writeBytes(encodedMsg);
 
-            out.add(new ThriftFrame(body));
+            out.add(new ThriftFrame(body, msg.header));
         }
     }
 
     @ChannelHandler.Sharable
     public static class Decoder extends MessageToMessageDecoder<ThriftFrame> {
         @Override
-        protected void decode(ChannelHandlerContext ctx, ThriftFrame msg, List<Object> out) throws Exception {
+        protected void decode(ChannelHandlerContext ctx, ThriftFrame frame, List<Object> out) throws Exception {
             try {
                 ThriftMessage message = new ThriftMessage();
-                byte[] body = new byte[msg.body.readableBytes()];
-                msg.body.readBytes(body);
+                byte[] body = new byte[frame.body.readableBytes()];
+                frame.body.readBytes(body);
                 message.read(body);
+                if (frame.getHeader() != null) {
+                    for (String key : frame.getHeader().keySet()) {
+                        message.setHeader(key, frame.getHeader().get(key));
+                    }
+                }
                 out.add(message);
             } finally {
                 // must release msg here
-                msg.release();
+                frame.release();
             }
         }
     }
