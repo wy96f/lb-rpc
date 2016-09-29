@@ -109,8 +109,8 @@ public class ThriftShortHandTest {
 
     @Test
     public void testNonExistentService() throws Exception {
-        thrown.expect(NoHostAvailableException.class);
-        thrown.expectMessage("Service name not found");
+        thrown.expect(RpcException.class);
+        thrown.expectMessage("Unexpected error occurred server side");
 
         sdr.registerServer(ThriftUtils.getServiceName(ThriftNonExistentService.Iface.class), CBUtil.THRIFT_PROTO, new InetSocketAddress(InetAddress.getLocalHost(), port));
         ThriftNonExistentService.Iface nonExistentService = RpcProxyFactory.createBuilder().withServiceDiscovery(sdr).create(ThriftNonExistentService.Iface.class, CBUtil.THRIFT_PROTO);
