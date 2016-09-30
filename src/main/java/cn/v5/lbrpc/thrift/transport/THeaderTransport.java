@@ -24,8 +24,8 @@ public class THeaderTransport extends CustomTFramedTransport {
     public static final int HEADER_MAGIC_MASK = 0xFFFF0000;
     public static final int HEADER_FLAGS_MASK = 0x0000FFFF;
 
-    protected static final int VERSION_MASK = 0xffff0000;
-    protected static final int VERSION_1 = 0x80010000;
+    public static final int VERSION_MASK = 0xffff0000;
+    public static final int VERSION_1 = 0x80010000;
 
     // 16th and 32nd bits must be 0 to differentiate framed vs unframed.
     public static final int HEADER_MAGIC = 0x0FFF0000;
@@ -335,7 +335,7 @@ public class THeaderTransport extends CustomTFramedTransport {
      * frame.data = buffer to use
      * frame.idx = Offset to data in this case, incremented by size of varint
      */
-    private int readVarint32Buf(ByteBuffer frame) {
+    public static int readVarint32Buf(ByteBuffer frame) {
         int result = 0;
         int shift = 0;
 
@@ -351,7 +351,7 @@ public class THeaderTransport extends CustomTFramedTransport {
         return result;
     }
 
-    private void writeVarint(ByteBuffer out, int n) {
+    public static void writeVarint(ByteBuffer out, int n) {
         while (true) {
             if ((n & ~0x7F) == 0) {
                 out.put((byte)n);
@@ -363,12 +363,12 @@ public class THeaderTransport extends CustomTFramedTransport {
         }
     }
 
-    private void writeString(ByteBuffer out, String str) {
+    private static void writeString(ByteBuffer out, String str) {
         writeVarint(out, str.length());
         out.put(ByteBuffer.wrap(str.getBytes(Charset.forName("UTF-8"))));
     }
 
-    private String readString(ByteBuffer in) throws TTransportException {
+    public static String readString(ByteBuffer in) throws TTransportException {
         try {
             int sz = readVarint32Buf(in);
             byte[] bytearr = new byte[sz];
@@ -537,7 +537,7 @@ public class THeaderTransport extends CustomTFramedTransport {
         return data;
     }
 
-    private int getWriteHeadersSize(Map<String, String> headers) {
+    private static int getWriteHeadersSize(Map<String, String> headers) {
         if (headers.size() == 0) {
             return 0;
         }
@@ -553,7 +553,7 @@ public class THeaderTransport extends CustomTFramedTransport {
         return len;
     }
 
-    private ByteBuffer flushInfoHeaders(Infos info, Map<String, String> headers) {
+    public static ByteBuffer flushInfoHeaders(Infos info, Map<String, String> headers) {
         ByteBuffer infoData =
                 ByteBuffer.allocate(getWriteHeadersSize(headers));
         if (!headers.isEmpty()) {
@@ -563,7 +563,7 @@ public class THeaderTransport extends CustomTFramedTransport {
                 writeString(infoData, pairs.getKey());
                 writeString(infoData, pairs.getValue());
             }
-            headers.clear();
+            //headers.clear();
         }
         infoData.limit(infoData.position());
         infoData.position(0);
