@@ -1,5 +1,7 @@
 package cn.v5.lbrpc.thrift.server;
 
+import cn.v5.lbrpc.common.server.ServerInterceptor;
+import cn.v5.lbrpc.common.utils.Pair;
 import cn.v5.lbrpc.thrift.data.ThriftFrame;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,6 +15,10 @@ import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketAddress;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by yangwei on 15-6-16.
  */
@@ -21,8 +27,10 @@ public class ThriftDispatcher extends SimpleChannelInboundHandler<ThriftFrame> {
     private static final Logger logger = LoggerFactory.getLogger(ThriftDispatcher.class);
     protected final TMultiplexedProcessor multiplexedProcessor;
     protected final TProtocolFactory protocolFactory;
+    protected final List<ServerInterceptor> interceptors;
 
-    public ThriftDispatcher() {
+    public ThriftDispatcher(List<ServerInterceptor> interceptors) {
+        this.interceptors = interceptors;
         this.multiplexedProcessor = new TMultiplexedProcessor();
         this.protocolFactory = new TBinaryProtocol.Factory();
     }
@@ -40,6 +48,19 @@ public class ThriftDispatcher extends SimpleChannelInboundHandler<ThriftFrame> {
         processRequest(ctx, msg, transport, inProtocol, outProtocol);
     }
 
+    private void preProcess(TMessage tMessage, SocketAddress addr, Map<String, String> header) {
+        if (interceptors == null || interceptors.isEmpty()) return;
+        for (ServerInterceptor interceptor : interceptors) {
+            interceptor.preProcess(tMessage.name, addr, header);
+        }
+    }
+
+    private void postProcess(Exception e) {
+        if (interceptors == null || interceptors.isEmpty()) return;
+        for (ServerInterceptor interceptor : interceptors) {
+            interceptor.postProcess(e);
+        }
+    }
 
     private void processRequest(ChannelHandlerContext ctx, ThriftFrame msg, TChannelBufferTransport transport, TProtocol inProtocol, TProtocol outProtocol) {
         TProtocol decoratedProtocol = null;
@@ -64,8 +85,11 @@ public class ThriftDispatcher extends SimpleChannelInboundHandler<ThriftFrame> {
 
             decoratedProtocol = new StoredMessageProtocol(inProtocol, standardMessage);
 
+
+            preProcess(standardMessage, ctx.channel().remoteAddress(), msg.getHeader());
             multiplexedProcessor.process(decoratedProtocol, outProtocol);
-            writeResponse(ctx, new ThriftFrame(transport.getOutputBuffer()));
+            postProcess(null);
+            writeResponse(ctx, new ThriftFrame(transport.getOutputBuffer(), null));
         } catch (TException e) {
             logger.error(ctx.channel().remoteAddress() + " occurs texception: ", e);
             if (e.getMessage().contains("Service name not found")) {
@@ -76,7 +100,7 @@ public class ThriftDispatcher extends SimpleChannelInboundHandler<ThriftFrame> {
             }
         } catch (Throwable e) {
             logger.error(ctx.channel().remoteAddress() + " occurs error: ", e);
-            TApplicationException applicationException = new TApplicationException(TApplicationException.INTERNAL_ERROR, e.getMessage());
+            TApplicationException applicationException = new TApplicationException(TApplicationException.INTERNAL_ERROR, e.toString());
             sendTApplicationException(ctx, applicationException, transport, decoratedProtocol, outProtocol);
         } finally {
             msg.release();
@@ -107,7 +131,8 @@ public class ThriftDispatcher extends SimpleChannelInboundHandler<ThriftFrame> {
             outProtocol.writeMessageEnd();
             outProtocol.getTransport().flush();
 
-            writeResponse(ctx, new ThriftFrame(transport.getOutputBuffer()));
+            postProcess(x);
+            writeResponse(ctx, new ThriftFrame(transport.getOutputBuffer(), null));
         } catch (TTransportException e) {
             logger.error(ctx.channel().remoteAddress() + " occurs error on sending exception: ", e);
             closeChannel(ctx);

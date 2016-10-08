@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cn.v5</groupId>
-    <artifactId>jprotobuf-lb-rpc</artifactId>
+    <artifactId>lb-rpc</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
         <guava.version>18.0</guava.version>
@@ -164,7 +164,7 @@
         <!-- https://mvnrepository.com/artifact/io.zipkin.brave/brave-core -->
         <dependency>
             <groupId>io.zipkin.brave</groupId>
-            <artifactId>brave-http</artifactId>
+            <artifactId>brave-jaxrs2</artifactId>
             <version>3.11.1</version>
         </dependency>
 

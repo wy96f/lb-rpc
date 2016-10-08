@@ -6,6 +6,7 @@ import cn.v5.lbrpc.protobuf.server.ProtobufRpcServerFactory;
 import cn.v5.lbrpc.thrift.server.ThriftRpcServerFactory;
 
 import java.net.InetAddress;
+import java.util.List;
 
 /**
  * Created by yangwei on 15-6-5.
@@ -47,7 +48,7 @@ public abstract class AbstractServerFactory {
         return this;
     }
 
-    public abstract IServer createServer();
+    public abstract IServer createServer(List<Object> interceptors);
 
     public abstract int getDefaultPort();
 }

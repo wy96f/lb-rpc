@@ -8,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -21,6 +24,8 @@ public class CompositeServer {
 
     private final ServiceRegistration registration;
 
+    private final List<Object> interceptors = new ArrayList<>();
+
     private final AtomicBoolean closing = new AtomicBoolean(false);
 
     // fail fast, don't register service if tomcat server starting failed
@@ -29,8 +34,13 @@ public class CompositeServer {
     }
 
     public CompositeServer(ServiceRegistration registration) {
-        Preconditions.checkNotNull(registration, "registration must not be null");
+        this(registration, new ServerInterceptor[0]);
+    }
+
+    public CompositeServer(ServiceRegistration registration, Object... interceptors) {
+        this.interceptors.addAll(Arrays.asList(interceptors));
         this.registration = registration;
+
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
             public void run() {
@@ -52,7 +62,7 @@ public class CompositeServer {
         IServer server = serverMap.get(port);
         if (server == null) {
             InetAddress address = InetAddress.getLocalHost();
-            server = AbstractServerFactory.newFactory(proto).withRegistration(registration).withAddress(address).withPort(port).createServer();
+            server = AbstractServerFactory.newFactory(proto).withRegistration(registration).withAddress(address).withPort(port).createServer(interceptors);
             serverMap.put(port, server);
             server.start();
             server.register(service, "");

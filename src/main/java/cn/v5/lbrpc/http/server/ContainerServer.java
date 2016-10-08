@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Enumeration;
+import java.util.List;
 
 /**
  * Created by yangwei on 15-6-6.
@@ -29,8 +30,8 @@ public class ContainerServer extends AbstractDeployServer {
     private final String proto;
     private AbstractHttpServer server;
 
-    protected ContainerServer(InetSocketAddress address, ServiceRegistration registration, String proto) {
-        super(address, registration);
+    protected ContainerServer(InetSocketAddress address, List<Object> interceptors, ServiceRegistration registration, String proto) {
+        super(address, interceptors, registration);
         this.proto = proto;
     }
 

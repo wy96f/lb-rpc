@@ -4,6 +4,7 @@ import cn.v5.lbrpc.common.client.core.ServerOptions;
 import cn.v5.lbrpc.common.client.core.loadbalancer.ServiceRegistration;
 import cn.v5.lbrpc.common.server.AbstractRpcServer;
 import cn.v5.lbrpc.common.server.AbstractServerFactory;
+import cn.v5.lbrpc.common.server.ServerInterceptor;
 import cn.v5.lbrpc.common.utils.CBUtil;
 import cn.v5.lbrpc.thrift.data.HeartbeatInternal;
 import cn.v5.lbrpc.thrift.data.ThriftFrame;
@@ -42,9 +43,9 @@ public class ThriftRpcServer extends AbstractRpcServer {
     private final Initializer initializer;
     private final Set<String> services = Sets.newCopyOnWriteArraySet();
 
-    public ThriftRpcServer(InetSocketAddress socket, ServerOptions options, ServiceRegistration registration) {
+    public ThriftRpcServer(InetSocketAddress socket, ServerOptions options, ServiceRegistration registration, List<ServerInterceptor> interceptors) {
         super(socket, options, registration);
-        this.initializer = new Initializer(group);
+        this.initializer = new Initializer(group, interceptors);
         try {
             ThriftUtils.ProcessorInfo processorInfo = ThriftUtils.getProcessor(heartbeatInternalImpl);
             initializer.addProcessor(processorInfo.getServiceName(), processorInfo.getProcessor());
@@ -53,9 +54,9 @@ public class ThriftRpcServer extends AbstractRpcServer {
         }
     }
 
-    public ThriftRpcServer(InetSocketAddress socket, ServiceRegistration registration) {
+    public ThriftRpcServer(InetSocketAddress socket, ServiceRegistration registration, List<ServerInterceptor> interceptors) {
         super(socket, registration);
-        this.initializer = new Initializer(group);
+        this.initializer = new Initializer(group, interceptors);
         try {
             ThriftUtils.ProcessorInfo processorInfo = ThriftUtils.getProcessor(heartbeatInternalImpl);
             initializer.addProcessor(processorInfo.getServiceName(), processorInfo.getProcessor());
@@ -64,9 +65,9 @@ public class ThriftRpcServer extends AbstractRpcServer {
         }
     }
 
-    public ThriftRpcServer(int port, ServiceRegistration registration) {
+    public ThriftRpcServer(int port, ServiceRegistration registration, List<ServerInterceptor> interceptors) {
         super(port, registration);
-        this.initializer = new Initializer(group);
+        this.initializer = new Initializer(group, interceptors);
         try {
             ThriftUtils.ProcessorInfo processorInfo = ThriftUtils.getProcessor(heartbeatInternalImpl);
             initializer.addProcessor(processorInfo.getServiceName(), processorInfo.getProcessor());
@@ -116,10 +117,13 @@ public class ThriftRpcServer extends AbstractRpcServer {
     private static class Initializer extends ChannelInitializer {
         private static final ThriftFrame.Encoder frameEncoder = new ThriftFrame.Encoder();
         private final EventExecutorGroup group;
-        ThriftDispatcher dispatcher = new ThriftDispatcher();
+        private final List<ServerInterceptor> interceptors;
+        private final ThriftDispatcher dispatcher;
 
-        private Initializer(EventExecutorGroup group) {
+        private Initializer(EventExecutorGroup group, List<ServerInterceptor> interceptors) {
             this.group = group;
+            this.interceptors = interceptors;
+            this.dispatcher = new ThriftDispatcher(interceptors);
         }
 
         @Override

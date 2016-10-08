@@ -25,11 +25,13 @@ import java.util.concurrent.TimeoutException;
 public abstract class AbstractDeployServer implements IServer {
     private static final Logger logger = LoggerFactory.getLogger(AbstractDeployServer.class);
     final InetSocketAddress address;
+    private List<Object> interceptors;
     private final ServiceRegistration registration;
     private final Set<String> services = Sets.newCopyOnWriteArraySet();
 
-    protected AbstractDeployServer(InetSocketAddress address, ServiceRegistration registration) {
+    protected AbstractDeployServer(InetSocketAddress address, List<Object> interceptors, ServiceRegistration registration) {
         this.address = address;
+        this.interceptors = interceptors;
         this.registration = registration;
     }
 
@@ -38,6 +40,11 @@ public abstract class AbstractDeployServer implements IServer {
         getDeployment().getMediaTypeMappings().put("json", "application/json");
         // TODO add filter and exception resolver?
         doStart();
+        if (interceptors != null && !interceptors.isEmpty()) {
+            for (Object interceptor : interceptors) {
+                getDeployment().getProviderFactory().register(interceptor);
+            }
+        }
     }
 
     @Override
