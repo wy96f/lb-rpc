@@ -38,6 +38,7 @@ public abstract class AbstractRpcServer implements IServer {
 
     public AbstractRpcServer(InetSocketAddress socket, ServerOptions options, ServiceRegistration registration) {
         this.options = options;
+        this.group = new NioEventLoopGroup(options.getMax_threads(), new ThreadFactoryBuilder().setNameFormat("Rpc-Group-%d").build());
         this.socket = socket;
         this.registration = registration;
     }
@@ -76,8 +77,6 @@ public abstract class AbstractRpcServer implements IServer {
             workerGroup = new NioEventLoopGroup();
             logger.info("Netty using NIO event loop");
         }
-
-        group = new NioEventLoopGroup(options.getMax_threads(), new ThreadFactoryBuilder().setNameFormat("Rpc-Group-%d").build());
 
         ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(workerGroup)
