@@ -226,6 +226,8 @@ public class Connection<Request extends IRequest, Response extends IResponse> im
     }
 
     public interface ResponseCallback<T extends IRequest, V extends IResponse> {
+        public void sendRequest(RequestHandler.ResultSetCallback callback);
+
         public int retryCount();
 
         public T request();
@@ -235,6 +237,8 @@ public class Connection<Request extends IRequest, Response extends IResponse> im
         public void onException(Connection connection, Exception exception, int retryCount);
 
         public boolean onTimeout(Connection connection, int streamId, int retryCount);
+
+
     }
 
     static class ResponseHandler {

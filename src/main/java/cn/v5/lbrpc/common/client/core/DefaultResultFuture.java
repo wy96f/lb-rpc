@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -112,6 +114,11 @@ public class DefaultResultFuture<T, Request extends IRequest, Response extends I
     @Override
     public void onException(Connection connection, Exception exception, int retryCount) {
         setException(exception);
+    }
+
+    @Override
+    public void onClose(Map<InetSocketAddress, Throwable> error, int retryCount, Exception e) {
+
     }
 
     /*@Override

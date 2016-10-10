@@ -25,7 +25,7 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
     private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
 
     private final NettyManager<Request, Response> nettyManager;
-    private final ResultSetCallback<Request, Response> callback;
+    private ResultSetCallback<Request, Response> callback;
     private final Iterator<Host> queryPlan;
 
     private final AtomicReference<QueryState> queryStateRef = new AtomicReference<QueryState>(QueryState.INITIAL);
@@ -43,11 +43,9 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
         this.queryPlan = null;
     }
 
-    public RequestHandler(AbstractNodeClient<Request, Response> abstractNodeClient, Pair<String, String> serviceAndProto, ResultSetCallback<Request, Response> callback) {
-        this.callback = callback;
+    public RequestHandler(AbstractNodeClient<Request, Response> abstractNodeClient, Pair<String, String> serviceAndProto) {
         this.nettyManager = (NettyManager) abstractNodeClient.getManager();
 
-        callback.register(this);
 
         this.queryPlan = nettyManager.getLoadBalancingPolicy(serviceAndProto).queryPlan();
     }
@@ -57,7 +55,15 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
         nettyManager.init(serviceAndProto, initContactPoints);
     }
 
-    public void sendRequest() {
+
+    public void sendRequest(ResultSetCallback callback) {
+        this.callback = callback;
+        callback.register(this);
+
+        send();
+    }
+
+    public void send() {
         try {
             while (queryPlan.hasNext()) {
                 Host host = queryPlan.next();
@@ -78,6 +84,7 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
     }
 
     private void setFinalException(Connection connection, Exception exception) {
+        callback.onClose(errors, retryCount(), exception);
         callback.onException(connection, exception, retryCount());
     }
 
@@ -139,6 +146,10 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
         return callback.request();
     }
 
+    public Map<InetSocketAddress, Throwable> getErrors() {
+        return errors;
+    }
+
     void retry(final boolean retryCurrent) {
         final Host h = current;
         nettyManager.executor.execute(new Runnable() {
@@ -149,7 +160,7 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
                         if (query(h))
                             return;
                     }
-                    sendRequest();
+                    send();
                 } catch (Exception e) {
                     setFinalException(null, new RpcInternalError("Unexpected exception while retrying query", e));
                 }
@@ -182,12 +193,13 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
 
     private void setFinalResult(Connection connection, Response response) {
         try {
+            callback.onClose(errors, retryCount(), null);
             boolean retry = callback.onSet(connection, response);
             if (retry) {
                 retry(false);
             }
         } catch (Exception e) {
-            callback.onException(connection, new RpcInternalError("Unexpected exception while setting final result from " + response, e), retryCount());
+            setFinalException(connection, new RpcInternalError("Unexpected exception while setting final result from " + response, e));
         }
     }
 
@@ -253,6 +265,7 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
          */
         public boolean onSet(Connection connection, Response response);
         public void onException(Connection connection, Exception exception, int retryCount);
+        public void onClose(Map<InetSocketAddress, Throwable> error, int retryCount, Exception e);
     }
 
     static class QueryState {

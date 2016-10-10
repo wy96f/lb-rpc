@@ -20,8 +20,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -89,6 +88,7 @@ public class RpcProxyFactory {
         public ReconnectionPolicy reconnectionPolicy;
         public PoolOptions poolOptions;
         public SocketOptions socketOptions;
+        public List<Object> interceptors = new ArrayList<>();
 
         public RpcProxyFactoryBuilder withServiceDiscovery(ServiceDiscovery sd) {
             this.sd = sd;
@@ -115,6 +115,11 @@ public class RpcProxyFactory {
             return this;
         }
 
+        public RpcProxyFactoryBuilder withInterceptors(Object... interceptorArray) {
+            this.interceptors.addAll(Arrays.asList(interceptorArray));
+            return this;
+        }
+
         public <T> T create(Class<T> clazz, String proto) throws Exception {
             return create(clazz, proto, false);
         }
@@ -138,15 +143,23 @@ public class RpcProxyFactory {
 
                 if (proto.compareTo(CBUtil.HTTP_PROTO) == 0) {
                     if (async) throw new UnsupportedOperationException("Http not support async proxy");
-                    return new ProxyBuilder<T>(clazz, nodeClient).buildHttp(getLoadBalancingPolicy());
+                    return new ProxyBuilder<T>(clazz, nodeClient).buildHttp(getLoadBalancingPolicy(), getInterceptors());
                 } else if (proto.compareTo(CBUtil.PROTOBUF_PROTO) == 0) {
-                    if (async) return new ProxyBuilder<T>(clazz, nodeClient).buildProtobufAsync(getLoadBalancingPolicy());
-                    else return new ProxyBuilder<T>(clazz, nodeClient).buildProtobuf(getLoadBalancingPolicy());
+                    if (async) return new ProxyBuilder<T>(clazz, nodeClient).buildProtobufAsync(getLoadBalancingPolicy(),
+                            CBUtil.<ClientInterceptor>convertToClientInterceptor(getInterceptors()));
+                    else return new ProxyBuilder<T>(clazz, nodeClient).buildProtobuf(getLoadBalancingPolicy(),
+                            CBUtil.<ClientInterceptor>convertToClientInterceptor(getInterceptors()));
                 } else {
-                    if (async) return new ProxyBuilder<T>(clazz, nodeClient).buildThriftAsync(getLoadBalancingPolicy());
-                    else return new ProxyBuilder<T>(clazz, nodeClient).buildThrift(getLoadBalancingPolicy());
+                    if (async) return new ProxyBuilder<T>(clazz, nodeClient).buildThriftAsync(getLoadBalancingPolicy(),
+                            CBUtil.<ClientInterceptor>convertToClientInterceptor(getInterceptors()));
+                    else return new ProxyBuilder<T>(clazz, nodeClient).buildThrift(getLoadBalancingPolicy(),
+                            CBUtil.<ClientInterceptor>convertToClientInterceptor(getInterceptors()));
                 }
             }
+        }
+
+        protected List<Object> getInterceptors() {
+            return interceptors;
         }
 
         protected LoadBalancingPolicy getLoadBalancingPolicy() {

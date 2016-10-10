@@ -1,9 +1,6 @@
 package cn.v5.lbrpc.common.client;
 
-import cn.v5.lbrpc.common.client.core.AbstractNodeClient;
-import cn.v5.lbrpc.common.client.core.DefaultResultFuture;
-import cn.v5.lbrpc.common.client.core.RequestHandler;
-import cn.v5.lbrpc.common.client.core.ResultFuture;
+import cn.v5.lbrpc.common.client.core.*;
 import cn.v5.lbrpc.common.data.IRequest;
 import cn.v5.lbrpc.common.data.IResponse;
 import cn.v5.lbrpc.common.utils.Pair;
@@ -13,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by yangwei on 15-5-3.
@@ -24,9 +24,13 @@ public abstract class AbstractRpcProxy<T, V extends IRequest, S extends IRespons
 
     private final AbstractNodeClient<V, S> nodeClient;
 
-    public AbstractRpcProxy(AbstractNodeClient<V, S> nodeClient, IProxy<T, V> proxyImpl) {
+    private final List<ClientInterceptor> interceptors = new ArrayList<>();
+
+    public AbstractRpcProxy(AbstractNodeClient<V, S> nodeClient, List<ClientInterceptor> interceptors, IProxy<T, V> proxyImpl) {
         this.proxyImpl = proxyImpl;
         this.nodeClient = nodeClient;
+        this.interceptors.addAll(interceptors);
+        Collections.reverse(this.interceptors);
     }
 
     public abstract Object invoke(Object proxy, Method method, Object[] args) throws Throwable;
@@ -61,8 +65,17 @@ public abstract class AbstractRpcProxy<T, V extends IRequest, S extends IRespons
         return future;
     }
 
+    private Connection.ResponseCallback<V, S> getRequestHandler(Pair<String, String> serviceAndProto) {
+        Connection.ResponseCallback res = new RequestHandler<V, S>(this.nodeClient, serviceAndProto);
+        for (int i = 0; i < interceptors.size(); i++) {
+            res = interceptors.get(i).intercept(res);
+        }
+        return res;
+    }
+
     // TODO use delegate?
     private void execute(Pair<String, String> serviceAndProto, RequestHandler.ResultSetCallback callback) {
-        new RequestHandler<V, S>(this.nodeClient, serviceAndProto, callback).sendRequest();
+        Connection.ResponseCallback<V, S> requestHandler = getRequestHandler(serviceAndProto);
+        requestHandler.sendRequest(callback);
     }
 }

@@ -2,6 +2,7 @@ package cn.v5.lbrpc.protobuf.client.core;
 
 import cn.v5.lbrpc.common.client.core.Connection;
 import cn.v5.lbrpc.common.client.core.IPipelineAndHeartbeat;
+import cn.v5.lbrpc.common.client.core.RequestHandler;
 import cn.v5.lbrpc.common.client.core.exceptions.ConnectionException;
 import cn.v5.lbrpc.protobuf.data.ProtobufFrame;
 import cn.v5.lbrpc.protobuf.data.ProtobufMessage;
@@ -22,6 +23,12 @@ public class ProtobufPipelineConfigurator implements IPipelineAndHeartbeat<Proto
     private static final ProtobufFrame.Encoder frameEncoder = new ProtobufFrame.Encoder();
 
     private static final Connection.ResponseCallback<ProtobufMessage, ProtobufMessage> HEARTBEAT_CALLBACK = new Connection.ResponseCallback<ProtobufMessage, ProtobufMessage>() {
+
+        @Override
+        public void sendRequest(RequestHandler.ResultSetCallback callback) {
+            throw new UnsupportedOperationException();
+        }
+
         @Override
         public ProtobufMessage request() {
             return ProtobufMessage.HEART_BEAT;
@@ -45,6 +52,7 @@ public class ProtobufPipelineConfigurator implements IPipelineAndHeartbeat<Proto
         @Override
         public void onException(Connection connection, Exception exception, int retryCount) {
             // Nothing to do: the connection is already defunct if we arrive here
+            throw new UnsupportedOperationException();
         }
 
         @Override
