@@ -167,7 +167,11 @@
             <artifactId>brave-jaxrs2</artifactId>
             <version>3.11.1</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.github.kristofa</groupId>
+            <artifactId>brave-spancollector-http</artifactId>
+            <version>3.7.0</version>
+        </dependency>
     </dependencies>
 
     <build>
