@@ -12,6 +12,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,9 +24,11 @@ public class HttpRpcProxy<T> implements InvocationHandler {
     private final Class<T> interfaceClass;
     private final LoadBalancingPolicy loadBalancingPolicy;
     private String serviceName;
+    private final List<Object> interceptors = new ArrayList<>();
 
-    public HttpRpcProxy(AbstractNodeClient httpNodeClient, Class<T> interfaceClass, LoadBalancingPolicy loadBalancingPolicy) {
+    public HttpRpcProxy(AbstractNodeClient httpNodeClient, List<Object> interceptors, Class<T> interfaceClass, LoadBalancingPolicy loadBalancingPolicy) {
         this.httpNodeClient = httpNodeClient;
+        this.interceptors.addAll(interceptors);
         this.interfaceClass = interfaceClass;
         this.loadBalancingPolicy = loadBalancingPolicy;
     }
@@ -48,6 +51,6 @@ public class HttpRpcProxy<T> implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         RequestContext context = new RequestContext(serviceName, interfaceClass, method, args);
-        return new HttpRequestHandler(httpNodeClient, context).sendRequest();
+        return new HttpRequestHandler(httpNodeClient, interceptors, context).sendRequest();
     }
 }

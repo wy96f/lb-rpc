@@ -37,6 +37,9 @@ public class HttpRequestHandler {
 
     private volatile Map<InetSocketAddress, Throwable> errors;
 
+    private List<Object> interceptors;
+
+
     public HttpRequestHandler(AbstractNodeClient nodeClient) {
         this.httpNodeClient = nodeClient;
         this.manager = (HttpManager) nodeClient.getManager();
@@ -44,9 +47,10 @@ public class HttpRequestHandler {
         this.queryPlan = null;
     }
 
-    public HttpRequestHandler(AbstractNodeClient nodeClient, RequestContext requestContext) {
+    public HttpRequestHandler(AbstractNodeClient nodeClient, List<Object> interceptors, RequestContext requestContext) {
         this.context = requestContext;
         this.httpNodeClient = nodeClient;
+        this.interceptors = interceptors;
         this.manager = (HttpManager) nodeClient.getManager();
 
         this.queryPlan = manager.getLoadBalancingPolicy(requestContext.getServiceAndProto()).queryPlan();
@@ -84,8 +88,13 @@ public class HttpRequestHandler {
         }
 
         try {
+            // TODO cache target or proxy?
             ResteasyWebTarget target = client.target("http://" + host.getAddress().getHostString() + ":" + host.getAddress().getPort());
-            //return target.request().get(type);
+            if (interceptors != null && !interceptors.isEmpty()) {
+                for (Object interceptor : interceptors) {
+                    target.register(interceptor);
+                }
+            }
             T proxy = target.proxy(type);
 
             Method method = context.getRealMethod();
