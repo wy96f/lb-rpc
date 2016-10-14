@@ -80,9 +80,12 @@ All you need to do is to set up service discovery and registration, then service
 #### client
 #### server
 	Refer to test/java/cn/v5/lbrpc/thrfit/ThriftShortHandTest.java
+	
+	If you want to turn tracing on, refer to test/java/cn/v5/lbrpc/thrfit/BraveRpcInterceptorsTest
 ### Http
 #### client
 #### server
 	Refer to test/java/cn/v5/lbrpc/http/HttpShortHandTest.java
-
+	
+	If you want to turn tracing on, refer to test/java/cn/v5/lbrpc/http/BraveHttpInterceptorsTest
 
