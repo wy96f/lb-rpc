@@ -63,6 +63,13 @@ public class ThriftRpcMethodInfo extends AbstractRpcMethodInfo {
                         }
                     }
                 }
+                /**
+                 * Null return val is fine in an all-Java world, but would break if you have a C++ client
+                 * calling your Java service. Since a thrift definition like this:
+                 * StructType myMethod() Turns into a C++ definition of:
+                 * void myMethod(StructType& ret) (or direct return for primitive types)
+                 * see http://grokbase.com/t/thrift/user/0868e2qd3v/null-ret-val for details.
+                 */
                 throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, resultClass.getSimpleName() + " failed: unknown result");
             }
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | NoSuchFieldException e) {
