@@ -20,8 +20,21 @@ import java.lang.reflect.Method;
  * Created by yangwei on 15-6-24.
  */
 public class ThriftRpcMethodInfo extends AbstractRpcMethodInfo {
-    public ThriftRpcMethodInfo(Method method) {
+    private final Class<?> resultClass;
+    private final Method readMethod;
+    private Method successMethod;
+    private Field[] fields;
+    private Field success;
+
+    public ThriftRpcMethodInfo(Method method) throws NoSuchMethodException, NoSuchFieldException {
         super(method);
+        this.resultClass = ThriftUtils.getResultClass(getMethod());
+        this.readMethod = resultClass.getMethod("read", TProtocol.class);
+        if (getOutputClass() != null) {
+            this.successMethod = resultClass.getMethod("isSetSuccess", new Class[0]);
+            this.success = resultClass.getField("success");
+            this.fields = resultClass.getDeclaredFields();
+        }
     }
 
     @Override
@@ -29,11 +42,9 @@ public class ThriftRpcMethodInfo extends AbstractRpcMethodInfo {
         TTransport transport = new TMemoryInputTransport(output);
         TProtocol protocol = new TMultiplexedProtocol(new TBinaryProtocol(transport), getServiceName());
 
-        Class<?> resultClass = ThriftUtils.getResultClass(getMethod());
         try {
             Object result = resultClass.newInstance();
 
-            Method readMethod = resultClass.getMethod("read", TProtocol.class);
             readMethod.invoke(result, protocol);
 
             protocol.readMessageEnd();
@@ -43,14 +54,11 @@ public class ThriftRpcMethodInfo extends AbstractRpcMethodInfo {
                 return null;
             }
 
-            Method successMethod = resultClass.getMethod("isSetSuccess", new Class[0]);
             boolean successful = (boolean) successMethod.invoke(result);
             if (successful) {
-                Field success = result.getClass().getField("success");
                 return success.get(result);
             } else {
                 Class<?>[] exceptionClasses = getExceptionClasses();
-                Field[] fields = resultClass.getDeclaredFields();
                 for (Field field : fields) {
                     if (field.getName().compareTo("success") == 0) {
                         continue;
@@ -72,7 +80,7 @@ public class ThriftRpcMethodInfo extends AbstractRpcMethodInfo {
                  */
                 throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, resultClass.getSimpleName() + " failed: unknown result");
             }
-        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | NoSuchFieldException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e.getCause());
         } catch (InvocationTargetException e) {
             if (Throwables.getRootCause(e) instanceof TException) {

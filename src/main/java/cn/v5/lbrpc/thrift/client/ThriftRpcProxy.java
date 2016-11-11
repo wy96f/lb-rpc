@@ -76,7 +76,13 @@ public class ThriftRpcProxy<T> implements IProxy<T, ThriftMessage> {
                                 + "] method name [" + methodName + "]");
             }
 
-            AbstractRpcMethodInfo methodInfo = new ThriftRpcMethodInfo(method);
+            AbstractRpcMethodInfo methodInfo = null;
+            try {
+                methodInfo = new ThriftRpcMethodInfo(method);
+            } catch (NoSuchMethodException | NoSuchFieldException e) {
+                throw new IllegalArgumentException("Parsing method " + methodName + "/" + serviceName +
+                        " occurs exception: " + e.toString());
+            }
 
             methodInfo.setServiceName(serviceName);
             methodInfo.setMethodName(methodName);
@@ -84,7 +90,7 @@ public class ThriftRpcProxy<T> implements IProxy<T, ThriftMessage> {
         }
 
         if (cachedRpcMethods.isEmpty()) {
-            throw new IllegalArgumentException("This no thrift method in interface class:"
+            throw new IllegalArgumentException("There is no thrift method in interface class:"
                     + interfaceClass.getName());
         }
 

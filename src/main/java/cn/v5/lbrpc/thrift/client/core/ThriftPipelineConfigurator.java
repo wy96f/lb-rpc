@@ -111,7 +111,7 @@ public class ThriftPipelineConfigurator implements IPipelineAndHeartbeat<ThriftM
         AbstractRpcMethodInfo methodInfo = null;
         try {
             methodInfo = new ThriftRpcMethodInfo(HeartbeatInternal.Iface.class.getDeclaredMethod("heartbeat", new Class<?>[0]));
-        } catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException | NoSuchFieldException e) {
             logger.error("get heartbeat method err: {}", e);
             return methodInfo;
         }
