@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Created by yangwei on 15-5-4.
  */
-// TODO use adapter pattern to wrap onException, onTimeout, onSet, etc?
 public class RequestHandler<Request extends IRequest, Response extends IResponse> implements Connection.ResponseCallback<Request, Response> {
     private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
 

@@ -38,7 +38,6 @@ public abstract class AbstractDeployServer implements IServer {
     @Override
     public void start() {
         getDeployment().getMediaTypeMappings().put("json", "application/json");
-        // TODO add filter and exception resolver?
         doStart();
         if (interceptors != null && !interceptors.isEmpty()) {
             for (Object interceptor : interceptors) {
