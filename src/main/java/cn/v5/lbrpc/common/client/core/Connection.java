@@ -1,6 +1,7 @@
 package cn.v5.lbrpc.common.client.core;
 
 import cn.v5.lbrpc.common.client.core.exceptions.ConnectionException;
+import cn.v5.lbrpc.common.client.core.exceptions.RpcException;
 import cn.v5.lbrpc.common.client.core.exceptions.TransportException;
 import cn.v5.lbrpc.common.data.IRequest;
 import cn.v5.lbrpc.common.data.IResponse;
@@ -11,6 +12,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.HashedWheelTimer;
@@ -315,7 +317,8 @@ public class Connection<Request extends IRequest, Response extends IResponse> im
 
             pipelineAndHearbeat.configurePipeline(pipeline);
 
-            pipeline.addLast("idleStateHandler", new IdleStateHandler(0, 0, 30, TimeUnit.SECONDS));
+            int readTimeoutMillis = connection.factory.getReadTimeoutMillis();
+            pipeline.addLast("idleStateHandler", new IdleStateHandler(readTimeoutMillis, readTimeoutMillis / 2, 0, TimeUnit.MILLISECONDS));
 
             pipeline.addLast(connection.dispatcher);
         }
@@ -506,13 +509,18 @@ public class Connection<Request extends IRequest, Response extends IResponse> im
         @Override
         public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
             if (evt instanceof IdleStateEvent) {
-                logger.debug("{} was inactive for {} seconds, sending heartbeat", Connection.this, 30);
-                ResponseCallback<Request, Response> heartbeat = Connection.this.pipelineAndHearbeat.getHeartbeat();
-                if (heartbeat == null) {
-                    logger.warn("pipelineAndHeartbeat has no heartbeat implementation");
-                    return;
+                logger.debug("{} was inactive", Connection.this);
+                IdleStateEvent idleStateEvent = (IdleStateEvent)evt;
+                if (idleStateEvent.state() == IdleState.WRITER_IDLE) {
+                    ResponseCallback<Request, Response> heartbeat = Connection.this.pipelineAndHearbeat.getHeartbeat();
+                    if (heartbeat == null) {
+                        logger.warn("pipelineAndHeartbeat has no heartbeat implementation");
+                        return;
+                    }
+                    write(heartbeat, true);
+                } else {
+                    defunct(new TransportException(address, "Timed out receiving any data from server"));
                 }
-                write(heartbeat, true);
             }
         }
 

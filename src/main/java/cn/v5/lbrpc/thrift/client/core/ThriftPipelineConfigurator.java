@@ -71,19 +71,17 @@ public class ThriftPipelineConfigurator implements IPipelineAndHeartbeat<ThriftM
 
                 @Override
                 public void onFailure(Throwable t) {
-                    fail(connection, new ConnectionException(connection.address, "Unexpected heartbeat response :" + response));
+                    //fail(connection, new ConnectionException(connection.address, "Unexpected heartbeat response :" + response));
                 }
             });
         }
 
         @Override
         public void onException(Connection connection, Exception exception, int retryCount) {
-            throw new UnsupportedOperationException();
         }
 
         @Override
         public boolean onTimeout(Connection connection, int streamId, int retryCount) {
-            fail(connection, new ConnectionException(connection.address, "Heartbeat query timedout"));
             return true;
         }
 

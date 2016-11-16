@@ -153,7 +153,7 @@ public class BraveRpcInterceptorsTest {
         assertThat(clientSpan.getBinary_annotations())
                 .filteredOn(b -> b.key.equals(BraveRpcServerInterceptor.RPC_EXCEPTION))
                 .extracting(b -> new String(b.value))
-                .has(new Condition<>(b -> b.matches("^cn.v5.lbrpc.common.client.core.exceptions.NoHostAvailableException:.*Timed out waiting for server respons.*$"), "NoHostAvailableException thrown"), atIndex(0));
+                .has(new Condition<>(b -> b.matches("^cn.v5.lbrpc.common.client.core.exceptions.NoHostAvailableException:.*Connection has been closed.*$"), "NoHostAvailableException thrown"), atIndex(0));
     }
 
     // null return is not supported by thrift(see <a href="http://wiki.apache.org/thrift/ThriftFeatures"></a>)
