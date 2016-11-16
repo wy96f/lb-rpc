@@ -15,6 +15,7 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.Version;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,7 @@ public abstract class AbstractRpcServer implements IServer {
 
     public AbstractRpcServer(InetSocketAddress socket, ServerOptions options, ServiceRegistration registration) {
         this.options = options;
-        this.group = new NioEventLoopGroup(options.getMax_threads(), new ThreadFactoryBuilder().setNameFormat("Rpc-Group-%d").build());
+        this.group = new DefaultEventExecutorGroup(options.getMax_threads(), new ThreadFactoryBuilder().setNameFormat("Rpc-Group-%d").build());
         this.socket = socket;
         this.registration = registration;
     }
