@@ -6,7 +6,6 @@ import cn.v5.lbrpc.common.data.IRequest;
 import cn.v5.lbrpc.common.data.IResponse;
 import com.github.kristofa.brave.*;
 import com.github.kristofa.brave.http.BraveHttpHeaders;
-import com.google.gson.Gson;
 import com.twitter.zipkin.gen.Endpoint;
 import com.twitter.zipkin.gen.Span;
 
