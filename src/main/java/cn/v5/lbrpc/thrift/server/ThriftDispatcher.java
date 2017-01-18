@@ -3,6 +3,8 @@ package cn.v5.lbrpc.thrift.server;
 import cn.v5.lbrpc.common.server.ServerInterceptor;
 import cn.v5.lbrpc.thrift.data.ThriftFrame;
 import io.netty.channel.*;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 import org.apache.thrift.TMultiplexedProcessor;
@@ -43,6 +45,18 @@ public class ThriftDispatcher extends SimpleChannelInboundHandler<ThriftFrame> {
         TProtocol outProtocol = protocolFactory.getProtocol(transport);
 
         processRequest(ctx, msg, transport, inProtocol, outProtocol);
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            IdleStateEvent idleEvent = (IdleStateEvent)evt;
+            if (idleEvent.state() == IdleState.READER_IDLE) {
+                logger.info("{} has been read idle for a while, close it", ctx.channel().remoteAddress());
+                ctx.close();
+            }
+        }
+        super.userEventTriggered(ctx, evt);
     }
 
     private void preProcess(TMessage tMessage, SocketAddress addr, Map<String, String> header) {

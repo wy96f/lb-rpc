@@ -16,6 +16,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.EventExecutorGroup;
 import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
@@ -116,6 +117,7 @@ public class ThriftRpcServer extends AbstractRpcServer {
 
     private static class Initializer extends ChannelInitializer {
         private static final ThriftFrame.Encoder frameEncoder = new ThriftFrame.Encoder();
+        private static final int DEFAULT_READ_IDLE_TIME = 120;
         private final EventExecutorGroup group;
         private final List<ServerInterceptor> interceptors;
         private final ThriftDispatcher dispatcher;
@@ -132,6 +134,7 @@ public class ThriftRpcServer extends AbstractRpcServer {
             pipeline.addLast("frameDecoder", new ThriftFrame.Decoder(102400, 0, 4));
             pipeline.addLast("frameEncoder", frameEncoder);
 
+            pipeline.addLast(new IdleStateHandler(DEFAULT_READ_IDLE_TIME, 0, 0));
             pipeline.addLast(group, "dispatcher", dispatcher);
         }
 
