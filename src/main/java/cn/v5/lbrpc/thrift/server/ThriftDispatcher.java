@@ -1,11 +1,8 @@
 package cn.v5.lbrpc.thrift.server;
 
 import cn.v5.lbrpc.common.server.ServerInterceptor;
-import cn.v5.lbrpc.common.utils.Pair;
 import cn.v5.lbrpc.thrift.data.ThriftFrame;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 import org.apache.thrift.TMultiplexedProcessor;
@@ -114,7 +111,7 @@ public class ThriftDispatcher extends SimpleChannelInboundHandler<ThriftFrame> {
     }
 
     private void writeResponse(ChannelHandlerContext ctx, ThriftFrame response) {
-        ctx.writeAndFlush(response);
+        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);
     }
 
     private void sendTApplicationException(ChannelHandlerContext ctx, TApplicationException x, TChannelBufferTransport transport, TProtocol inProtocol, TProtocol outProtocol) {
