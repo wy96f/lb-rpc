@@ -34,6 +34,7 @@ public abstract class AbstractRpcServer implements IServer {
     public final ServiceRegistration registration;
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
     protected EventLoopGroup workerGroup;
+    protected EventLoopGroup bossGroup;
     protected EventExecutorGroup group;
     private ServerOptions options;
 
@@ -72,16 +73,19 @@ public abstract class AbstractRpcServer implements IServer {
     private void run() {
         boolean hasEpoll = enableEpoll ? Epoll.isAvailable() : false;
         if (hasEpoll) {
+            bossGroup = new EpollEventLoopGroup(1);
             workerGroup = new EpollEventLoopGroup();
             logger.info("Netty using native Epoll event loop");
         } else {
+            bossGroup = new NioEventLoopGroup(1);
             workerGroup = new NioEventLoopGroup();
             logger.info("Netty using NIO event loop");
         }
 
         ServerBootstrap bootstrap = new ServerBootstrap()
-                .group(workerGroup)
+                .group(bossGroup, workerGroup)
                 .channel(hasEpoll ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
+                .option(ChannelOption.SO_REUSEADDR, true)
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
                 .childOption(ChannelOption.ALLOCATOR, CBUtil.allocator)
@@ -103,14 +107,16 @@ public abstract class AbstractRpcServer implements IServer {
 
     protected abstract ChannelInitializer getChannelInitializer();
 
-    // TODO close all client connections
     private void close() {
         logger.info("starting stopping netty group on {}", socket);
-        workerGroup.shutdownGracefully();
-        workerGroup = null;
+        bossGroup.shutdownGracefully();
+        bossGroup = null;
 
         group.shutdownGracefully();
         group = null;
+
+        workerGroup.shutdownGracefully();
+        workerGroup = null;
         logger.info("Stop listening on {}", socket);
     }
 }
