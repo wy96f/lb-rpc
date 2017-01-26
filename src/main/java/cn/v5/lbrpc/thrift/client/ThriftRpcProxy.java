@@ -110,7 +110,7 @@ public class ThriftRpcProxy<T> implements IProxy<T, ThriftMessage> {
     }
 
     public ThriftMessage makeRequestMessage(AbstractRpcMethodInfo methodInfo, Object[] args) throws IOException {
-        ThriftMessage message = new ThriftMessage(methodInfo.getServiceName(), methodInfo.getMethodName(), TMessageType.CALL);
+        ThriftMessage message = new ThriftMessage(methodInfo.getServiceName(), methodInfo.getMethodName(), args, TMessageType.CALL);
 
         Class<?> argsClass = ThriftUtils.getArgsClass(methodInfo.getMethod());
 

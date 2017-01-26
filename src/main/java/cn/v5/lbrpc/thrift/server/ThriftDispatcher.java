@@ -39,6 +39,12 @@ public class ThriftDispatcher extends SimpleChannelInboundHandler<ThriftFrame> {
     }
 
     @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.error(String.format("%s occurs exception",ctx.channel().remoteAddress()), cause);
+        super.exceptionCaught(ctx, cause);
+    }
+
+    @Override
     protected void channelRead0(ChannelHandlerContext ctx, ThriftFrame msg) throws Exception {
         TChannelBufferTransport transport = new TChannelBufferTransport(msg.body, ctx.channel());
         TProtocol inProtocol = protocolFactory.getProtocol(transport);

@@ -38,12 +38,22 @@ public class ProtobufRequestMeta implements cn.v5.lbrpc.common.data.Readable, Wr
     @Protobuf
     private Long logId;
 
+    private Object[] args;
+
     public ProtobufRequestMeta() {
     }
 
     public ProtobufRequestMeta(String serviceName, String methodName) {
         this.serviceName = serviceName;
         this.methodName = methodName;
+    }
+
+    public Object[] getArgs() {
+        return args;
+    }
+
+    public void setArgs(Object[] args) {
+        this.args = args;
     }
 
     public String getSerivceName() {

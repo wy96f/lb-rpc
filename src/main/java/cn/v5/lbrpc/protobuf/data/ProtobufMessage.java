@@ -121,6 +121,11 @@ public class ProtobufMessage implements Readable, Writerable, Cloneable, IRespon
     }
 
     @Override
+    public Object[] getArgs() {
+        return request.getArgs();
+    }
+
+    @Override
     public int getStreamId() {
         return streamId;
     }

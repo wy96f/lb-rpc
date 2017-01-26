@@ -43,15 +43,17 @@ public class ThriftMessage implements Readable, Writerable, Cloneable, IResponse
     private TBase args;
     private byte[] result;
     private Map<String, String> header;
+    private Object[] methodArgs;
 
     public ThriftMessage() {
 
     }
 
-    public ThriftMessage(String serviceName, String methodName, byte msgType) {
+    public ThriftMessage(String serviceName, String methodName, Object[] args, byte msgType) {
         this.serviceName = serviceName;
         this.methodName = methodName;
         this.msgType = msgType;
+        this.methodArgs = args;
     }
 
     @Override
@@ -143,6 +145,11 @@ public class ThriftMessage implements Readable, Writerable, Cloneable, IResponse
     public void setHeader(String key, String value) {
         if (header == null) header = new HashMap<>();
         header.put(key, value);
+    }
+
+    @Override
+    public Object[] getArgs() {
+        return methodArgs;
     }
 
     @Override

@@ -126,6 +126,7 @@ public class ProtobufRpcProxy<T> implements IProxy<T, ProtobufMessage> {
         ProtobufRequestMeta requestMeta = new ProtobufRequestMeta();
         requestMeta.setMethodName(methodInfo.getMethodName());
         requestMeta.setServiceName(methodInfo.getServiceName());
+        requestMeta.setArgs(args);
         message.setRequest(requestMeta);
         if (args[0] != null) {
             message.setData(((ProtobufRpcMethodInfo) methodInfo).inputEncode(args[0]));

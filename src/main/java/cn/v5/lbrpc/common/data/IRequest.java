@@ -8,4 +8,5 @@ public interface IRequest {
     public void setHeader(String key, String value);
     public String getService();
     public String getMethod();
+    public Object[] getArgs();
 }
