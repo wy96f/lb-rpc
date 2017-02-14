@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -110,12 +111,15 @@ public abstract class AbstractRpcServer implements IServer {
     private void close() {
         logger.info("starting stopping netty group on {}", socket);
         bossGroup.shutdownGracefully();
-        bossGroup = null;
-
         group.shutdownGracefully();
-        group = null;
-
         workerGroup.shutdownGracefully();
+        try {
+            bossGroup.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            logger.warn("stopping netty boss group of {} interrupted", socket);
+        }
+        bossGroup = null;
+        group = null;
         workerGroup = null;
         logger.info("Stop listening on {}", socket);
     }
