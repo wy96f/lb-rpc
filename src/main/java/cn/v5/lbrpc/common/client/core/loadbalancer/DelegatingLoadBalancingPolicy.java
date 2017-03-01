@@ -1,6 +1,7 @@
 package cn.v5.lbrpc.common.client.core.loadbalancer;
 
 import cn.v5.lbrpc.common.client.core.Host;
+import cn.v5.lbrpc.common.data.IRequest;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -19,8 +20,8 @@ public abstract class DelegatingLoadBalancingPolicy implements LoadBalancingPoli
         delegate.init(hosts);
     }
 
-    public Iterator<Host> queryPlan() {
-        return delegate.queryPlan();
+    public Iterator<Host> queryPlan(IRequest request) {
+        return delegate.queryPlan(request);
     }
 
     public void onUp(Host host) {

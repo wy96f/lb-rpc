@@ -31,8 +31,6 @@ public class HttpRequestHandler {
 
     private final HttpManager manager;
 
-    private final Iterator<Host> queryPlan;
-
     private final RequestContext context;
 
     private volatile Map<InetSocketAddress, Throwable> errors;
@@ -44,7 +42,6 @@ public class HttpRequestHandler {
         this.httpNodeClient = nodeClient;
         this.manager = (HttpManager) nodeClient.getManager();
         this.context = null;
-        this.queryPlan = null;
     }
 
     public HttpRequestHandler(AbstractNodeClient nodeClient, List<Object> interceptors, RequestContext requestContext) {
@@ -52,12 +49,12 @@ public class HttpRequestHandler {
         this.httpNodeClient = nodeClient;
         this.interceptors = interceptors;
         this.manager = (HttpManager) nodeClient.getManager();
-
-        this.queryPlan = manager.getLoadBalancingPolicy(requestContext.getServiceAndProto()).queryPlan();
     }
 
     public Object sendRequest() {
         try {
+            Iterator<Host> queryPlan = manager.getLoadBalancingPolicy(context.getServiceAndProto()).queryPlan(new HttpRequestAdapter(context));
+
             while (queryPlan.hasNext()) {
                 Host host = queryPlan.next();
                 if (logger.isTraceEnabled())

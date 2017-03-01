@@ -25,7 +25,8 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
 
     private final NettyManager<Request, Response> nettyManager;
     private ResultSetCallback<Request, Response> callback;
-    private final Iterator<Host> queryPlan;
+    private Iterator<Host> queryPlan;
+    private Pair<String, String> serviceAndProto;
 
     private final AtomicReference<QueryState> queryStateRef = new AtomicReference<QueryState>(QueryState.INITIAL);
 
@@ -44,9 +45,7 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
 
     public RequestHandler(AbstractNodeClient<Request, Response> abstractNodeClient, Pair<String, String> serviceAndProto) {
         this.nettyManager = (NettyManager) abstractNodeClient.getManager();
-
-
-        this.queryPlan = nettyManager.getLoadBalancingPolicy(serviceAndProto).queryPlan();
+        this.serviceAndProto = serviceAndProto;
     }
 
     public void init(Pair<String, String> serviceAndProto, List<InetSocketAddress> initContactPoints, LoadBalancingPolicy loadBalancingPolicy) {
@@ -58,6 +57,7 @@ public class RequestHandler<Request extends IRequest, Response extends IResponse
     public void sendRequest(ResultSetCallback callback) {
         this.callback = callback;
         callback.register(this);
+        this.queryPlan = nettyManager.getLoadBalancingPolicy(serviceAndProto).queryPlan(callback.request());
 
         send();
     }

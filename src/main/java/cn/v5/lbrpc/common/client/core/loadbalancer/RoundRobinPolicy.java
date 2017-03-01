@@ -1,6 +1,7 @@
 package cn.v5.lbrpc.common.client.core.loadbalancer;
 
 import cn.v5.lbrpc.common.client.core.Host;
+import cn.v5.lbrpc.common.data.IRequest;
 import com.google.common.collect.AbstractIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,7 @@ public class RoundRobinPolicy implements LoadBalancingPolicy {
     }
 
     @Override
-    public Iterator<Host> queryPlan() {
+    public Iterator<Host> queryPlan(IRequest request) {
         final List<Host> hosts = (List<Host>) liveHosts.clone();
         final int startIdx = index.getAndIncrement();
         if (startIdx > Integer.MAX_VALUE - 10000) {
