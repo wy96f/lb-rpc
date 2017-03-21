@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -79,9 +80,9 @@ public class ServiceChangesTest {
          * If we refresh nonExistentService first, we can only rely on the reconnection to re add the EchoService.
          */
 
-        nodeClient.forceRefresh();
+        //nodeClient.forceRefresh();
         // wait for the manager's onUp
-        Thread.sleep(100);
+        Thread.sleep(1000);
         HistoryPolicy nonExistentPolicy = new HistoryPolicy(new RoundRobinPolicy());
         ThriftNonExistentService.Iface nonExistentService = RpcProxyFactory.createBuilder().withServiceDiscovery(sdr)
                 .withLoadBalancingPolicy(nonExistentPolicy)
@@ -121,6 +122,7 @@ public class ServiceChangesTest {
         try {
             // trigger manager's onDown
             echoService.echoReturnString("yw", "bll");
+            assertFalse(true);
         } catch (Exception e) {
             assertTrue(e instanceof NoHostAvailableException);
         }
@@ -132,10 +134,10 @@ public class ServiceChangesTest {
          * Here we refresh EchoService first so we can up the EchoService first bcs host is not up.
          * If we refresh nonExistentService first, we can only rely on the reconnection to re add the EchoService.
          */
-        nodeClient.forceRefresh();
+        //nodeClient.forceRefresh();
 
         // wait for the manager's onUp
-        Thread.sleep(100);
+        Thread.sleep(1000);
 
         echoService.echoReturnString("yw", "bll");
 
@@ -160,6 +162,8 @@ public class ServiceChangesTest {
                 new Host(Pair.create(ThriftUtils.getServiceName(ThriftNonExistentService.Iface.class), CBUtil.THRIFT_PROTO), new InetSocketAddress(InetAddress.getLocalHost(), AbstractServerFactory.newFactory(AbstractServerFactory.THRIFT_RPC).getDefaultPort())));
         Pair<HistoryPolicy.Action, Host> n5 = Pair.create(HistoryPolicy.Action.DOWN,
                 new Host(Pair.create(ThriftUtils.getServiceName(ThriftNonExistentService.Iface.class), CBUtil.THRIFT_PROTO), new InetSocketAddress(InetAddress.getLocalHost(), AbstractServerFactory.newFactory(AbstractServerFactory.THRIFT_RPC).getDefaultPort())));
+        nodeClient.forceRefresh();
+        Thread.sleep(1000);
         assertThat(nonExistentPolicy.history, Matchers.contains(n1, n2, n3, n4, n5));
         assertThat(TestUtils.findHost(CBUtil.THRIFT_PROTO, new InetSocketAddress(InetAddress.getLocalHost(), AbstractServerFactory.newFactory(AbstractServerFactory.THRIFT_RPC).getDefaultPort())).getServices(), Matchers.contains(Pair.create(ThriftUtils.getServiceName(Echo.Iface.class), CBUtil.THRIFT_PROTO)));
     }

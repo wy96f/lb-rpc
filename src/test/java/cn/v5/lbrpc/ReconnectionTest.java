@@ -73,7 +73,7 @@ public class ReconnectionTest {
         server.register(new EchoServiceImpl(), AbstractServerFactory.THRIFT_RPC, port);
 
         // wait for the reconnection completed
-        Thread.sleep(baseInterval * 4);
+        Thread.sleep(baseInterval * 100);
         assertThat(TestUtils.findHost(CBUtil.THRIFT_PROTO, new InetSocketAddress(InetAddress.getLocalHost(), port)).isUp(), equalTo(true));
         // must not have exception thrown
         echoService.echoReturnString("yw", "bll");
