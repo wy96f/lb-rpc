@@ -165,6 +165,6 @@ public class ServiceChangesTest {
         nodeClient.forceRefresh();
         Thread.sleep(1000);
         assertThat(nonExistentPolicy.history, Matchers.contains(n1, n2, n3, n4, n5));
-        assertThat(TestUtils.findHost(CBUtil.THRIFT_PROTO, new InetSocketAddress(InetAddress.getLocalHost(), AbstractServerFactory.newFactory(AbstractServerFactory.THRIFT_RPC).getDefaultPort())).getServices(), Matchers.contains(Pair.create(ThriftUtils.getServiceName(Echo.Iface.class), CBUtil.THRIFT_PROTO)));
+        assertThat(TestUtils.findHost(CBUtil.THRIFT_PROTO, new InetSocketAddress(InetAddress.getLocalHost(), AbstractServerFactory.newFactory(AbstractServerFactory.THRIFT_RPC).getDefaultPort())).getCurrentServices(), Matchers.contains(Pair.create(ThriftUtils.getServiceName(Echo.Iface.class), CBUtil.THRIFT_PROTO)));
     }
 }

@@ -221,6 +221,7 @@ public class HttpManager extends AbstractManager {
                 if (!reconnectionPolicy().retry(e, retryCount, elapsedTime)) {
                     logger.debug("Failed reconnection to {} ({}), stop reconnection after {} times and {} ms",
                             host, e.getMessage(), retryCount, elapsedTime);
+                    triggerOnRemoval(host);
                     return false;
                 }
                 if (logger.isDebugEnabled())
@@ -233,6 +234,7 @@ public class HttpManager extends AbstractManager {
                 if (!reconnectionPolicy().retry(e, retryCount, elapsedTime)) {
                     logger.error(String.format("Unknown error during reconnection to %s, stop reconnection after %d times and %d ms",
                             host, retryCount, elapsedTime), e);
+                    triggerOnRemoval(host);
                     return false;
                 }
                 logger.error(String.format("Unknown error during reconnection to %s, scheduling retry in %d milliseconds", host, nextDelayMs), e);

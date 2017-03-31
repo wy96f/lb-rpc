@@ -71,4 +71,9 @@ public class RoundRobinPolicy implements LoadBalancingPolicy {
     public void onDown(Host host) {
         liveHosts.remove(host);
     }
+
+    @Override
+    public void onRemoval(Host host) {
+        liveHosts.remove(host);
+    }
 }

@@ -225,6 +225,7 @@ class NettyManager<T extends IRequest, V extends IResponse> extends AbstractMana
                 }
                 if (logger.isDebugEnabled())
                     logger.debug("Failed reconnection to {} ({}), scheduling retry in {} milliseconds", host, e.getMessage(), nextDelayMs);
+                triggerOnRemoval(host);
                 return true;
             }
 
@@ -236,6 +237,7 @@ class NettyManager<T extends IRequest, V extends IResponse> extends AbstractMana
                     return false;
                 }
                 logger.error(String.format("Unknown error during reconnection to %s, scheduling retry in %d milliseconds", host, nextDelayMs), e);
+                triggerOnRemoval(host);
                 return true;
             }
         }.start();

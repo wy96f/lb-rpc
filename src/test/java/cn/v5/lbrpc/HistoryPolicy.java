@@ -18,7 +18,7 @@ import java.util.List;
 public class HistoryPolicy extends DelegatingLoadBalancingPolicy {
     private static final Logger logger = LoggerFactory.getLogger(HistoryPolicy.class);
 
-    public enum Action {INIT, UP, DOWN, ADD}
+    public enum Action {INIT, UP, DOWN, ADD, REMOVE}
 
     List<Pair<Action, Host>> history = Lists.newArrayList();
 
@@ -54,5 +54,12 @@ public class HistoryPolicy extends DelegatingLoadBalancingPolicy {
         super.onAdd(host);
         logger.info("add host {}", host);
         history.add(Pair.create(Action.ADD, host));
+    }
+
+    @Override
+    public void onRemoval(Host host) {
+        super.onRemoval(host);
+        logger.info("remove host {}", host);
+        history.add(Pair.create(Action.REMOVE, host));
     }
 }

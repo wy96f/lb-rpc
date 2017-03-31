@@ -98,6 +98,11 @@ public class ConsistentHashPolicy implements LoadBalancingPolicy {
     }
 
     @Override
+    public void onRemoval(Host host) {
+        ring.removeHost(host);
+    }
+
+    @Override
     public void onAdd(Host host) {
         ring.addHost(host);
     }
@@ -198,8 +203,10 @@ public class ConsistentHashPolicy implements LoadBalancingPolicy {
             invalidateCache();
         }
 
-        public void removeHost() {
-            // TODO
+        public void removeHost(Host host) {
+            synchronized (this) {
+                tokenToHosts.removeValue(host);
+            }
             invalidateCache();
         }
     }

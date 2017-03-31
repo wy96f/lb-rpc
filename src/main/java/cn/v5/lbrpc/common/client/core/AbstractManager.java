@@ -98,6 +98,10 @@ public abstract class AbstractManager<T extends IRequest, V extends IResponse> {
         return hosts.get(address);
     }
 
+    protected void removeHost(Host host) {
+        removePool(host);
+    }
+
     public Host addHost(Pair<String, String> serviceAndProto, InetSocketAddress address) {
         Host newHost = new Host(serviceAndProto, address);
         Host previous = hosts.putIfAbsent(address, newHost);
@@ -143,6 +147,15 @@ public abstract class AbstractManager<T extends IRequest, V extends IResponse> {
         });
     }
 
+    public ListenableFuture<?> triggerOnRemoval(final Host host) {
+        return executor.submit(new ExceptionCatchingRunnable() {
+            @Override
+            public void runMayThrow() throws Exception {
+                onRemoval(host);
+            }
+        });
+    }
+
     public ListenableFuture<?> triggerOnAdd(final Host host) {
         return executor.submit(new ExceptionCatchingRunnable() {
             @Override
@@ -159,6 +172,33 @@ public abstract class AbstractManager<T extends IRequest, V extends IResponse> {
                 onUp(host);
             }
         });
+    }
+
+    protected void onRemoval(final Host host) throws InterruptedException {
+        logger.debug("Host {} is removed", host);
+
+        if (isClosed())
+            return;
+
+        boolean locked = host.notificationsLock.tryLock(60, TimeUnit.SECONDS);
+        if (!locked) {
+            logger.warn("Could not acquire notifications lock within {} seconds, ignoring DOWN notification for {}", 60, host);
+            return;
+        }
+
+        if (host.isUp()) {
+            logger.warn("Host {} is up, don't remove it", host);
+            return;
+        }
+
+        try {
+            for (Pair<String, String> serviceAndProto : host.getAllServices()) {
+                getLoadBalancingPolicy(serviceAndProto).onDown(host);
+            }
+            removeHost(host);
+        } finally {
+            host.notificationsLock.unlock();
+        }
     }
 
     protected void onAdd(final Host host) throws InterruptedException, ExecutionException {
@@ -192,7 +232,7 @@ public abstract class AbstractManager<T extends IRequest, V extends IResponse> {
 
             host.setUp();
 
-            for (Pair<String, String> serviceAndProto : host.getServices()) {
+            for (Pair<String, String> serviceAndProto : host.getCurrentServices()) {
                 getLoadBalancingPolicy(serviceAndProto).onAdd(host);
             }
         } finally {
@@ -222,11 +262,11 @@ public abstract class AbstractManager<T extends IRequest, V extends IResponse> {
         try {
             if (host.state == Host.State.UP) {
                 /**
-                 * New services maybe added in the host, so we should on Up the new service
-                 * loadbalancing policy. It doesn't matter we on up all the services
+                 * New currentServices maybe added in the host, so we should on Up the new service
+                 * loadbalancing policy. It doesn't matter we on up all the currentServices
                  * because host is locked.
                  */
-                for (Pair<String, String> serviceAndProto : host.getServices()) {
+                for (Pair<String, String> serviceAndProto : host.getCurrentServices()) {
                     getLoadBalancingPolicy(serviceAndProto).onUp(host);
                 }
                 return;
@@ -240,7 +280,7 @@ public abstract class AbstractManager<T extends IRequest, V extends IResponse> {
             }
 
             removePool(host);
-            for (Pair<String, String> serviceAndProto : host.getServices()) {
+            for (Pair<String, String> serviceAndProto : host.getCurrentServices()) {
                 getLoadBalancingPolicy(serviceAndProto).onUp(host);
             }
 
@@ -305,7 +345,7 @@ public abstract class AbstractManager<T extends IRequest, V extends IResponse> {
 
             host.setDown();
 
-            for (Pair<String, String> serviceAndProto : host.getServices()) {
+            for (Pair<String, String> serviceAndProto : host.getCurrentServices()) {
                 getLoadBalancingPolicy(serviceAndProto).onDown(host);
             }
             removePool(host);

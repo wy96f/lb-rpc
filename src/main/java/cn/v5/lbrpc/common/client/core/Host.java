@@ -18,29 +18,36 @@ public class Host {
     public final ReentrantLock notificationsLock = new ReentrantLock(true);
     public final AtomicReference<ListenableFuture<?>> reconnectionAttempt = new AtomicReference<ListenableFuture<?>>();
     final InetSocketAddress address;
-    // each host supports only one proto at one time, but there maybe many services on it
-    final Set<Pair<String, String>> services = new CopyOnWriteArraySet<Pair<String, String>>();
+    // each host supports only one proto at one time, but there maybe many currentServices on it
+    final Set<Pair<String, String>> currentServices = new CopyOnWriteArraySet<Pair<String, String>>();
+    final Set<Pair<String, String>> allServices = new CopyOnWriteArraySet<Pair<String, String>>();
     protected volatile State state;
 
     //private Manager manager;
 
     public Host(Pair<String, String> serviceAndProto, InetSocketAddress address) {
-        services.add(serviceAndProto);
+        currentServices.add(serviceAndProto);
+        allServices.add(serviceAndProto);
         this.address = address;
         //this.manager = manager;
         this.state = State.ADDED;
     }
 
     public void addService(Pair<String, String> serviceAndProto) {
-        services.add(serviceAndProto);
+        currentServices.add(serviceAndProto);
+        allServices.add(serviceAndProto);
     }
 
-    public Collection<Pair<String, String>> getServices() {
-        return services;
+    public Collection<Pair<String, String>> getCurrentServices() {
+        return currentServices;
+    }
+
+    public Collection<Pair<String, String>> getAllServices() {
+        return allServices;
     }
 
     public void removeService(Pair<String, String> serviceAndProto) {
-        services.remove(serviceAndProto);
+        currentServices.remove(serviceAndProto);
     }
 
     public InetSocketAddress getAddress() {
@@ -94,5 +101,7 @@ public class Host {
         public void onDown(Host host);
 
         public void onAdd(Host host);
+
+        public void onRemoval(Host host);
     }
 }

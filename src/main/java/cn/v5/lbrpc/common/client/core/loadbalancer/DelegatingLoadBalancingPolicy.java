@@ -36,6 +36,11 @@ public abstract class DelegatingLoadBalancingPolicy implements LoadBalancingPoli
         delegate.onAdd(host);
     }
 
+    @Override
+    public void onRemoval(Host host) {
+        delegate.onRemoval(host);
+    }
+
     public LoadBalancingPolicy getChildPolicy() {
         return delegate;
     }
