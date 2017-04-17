@@ -2,6 +2,8 @@ package cn.v5.lbrpc.http.server;
 
 import cn.v5.lbrpc.common.client.core.loadbalancer.ServiceRegistration;
 import cn.v5.lbrpc.common.server.IServer;
+import cn.v5.lbrpc.common.server.LifeCycle;
+import cn.v5.lbrpc.common.server.LifeCycleServer;
 import cn.v5.lbrpc.common.utils.CBUtil;
 import cn.v5.lbrpc.http.utils.HttpUtils;
 import com.google.common.collect.Lists;
@@ -22,7 +24,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by yangwei on 15-6-6.
  */
-public abstract class AbstractDeployServer implements IServer {
+public abstract class AbstractDeployServer implements LifeCycleServer {
     private static final Logger logger = LoggerFactory.getLogger(AbstractDeployServer.class);
     final InetSocketAddress address;
     private List<Object> interceptors;

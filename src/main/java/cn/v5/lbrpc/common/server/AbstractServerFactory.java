@@ -48,7 +48,7 @@ public abstract class AbstractServerFactory {
         return this;
     }
 
-    public abstract IServer createServer(List<Object> interceptors);
+    public abstract LifeCycleServer createServer(List<Object> interceptors);
 
     public abstract int getDefaultPort();
 }

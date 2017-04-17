@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by yangwei on 15-6-16.
  */
-public abstract class AbstractRpcServer implements IServer {
+public abstract class AbstractRpcServer implements LifeCycleServer {
     private static final Logger logger = LoggerFactory.getLogger(AbstractRpcServer.class);
     private static final boolean enableEpoll = Boolean.valueOf(System.getProperty("cassandra.native.epoll.enabled", "true"));
 

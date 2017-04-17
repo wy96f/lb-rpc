@@ -1,7 +1,7 @@
 package cn.v5.lbrpc.thrift.server;
 
 import cn.v5.lbrpc.common.server.AbstractServerFactory;
-import cn.v5.lbrpc.common.server.IServer;
+import cn.v5.lbrpc.common.server.LifeCycleServer;
 import cn.v5.lbrpc.common.server.ServerInterceptor;
 import cn.v5.lbrpc.common.utils.CBUtil;
 
@@ -15,7 +15,7 @@ public class ThriftRpcServerFactory extends AbstractServerFactory {
     private final int DEFAULT_PORT = 60061;
 
     @Override
-    public IServer createServer(List<Object> interceptors) {
+    public LifeCycleServer createServer(List<Object> interceptors) {
         return new ThriftRpcServer(new InetSocketAddress(address, port),
                 registration, CBUtil.<ServerInterceptor>convertToClientInterceptor(interceptors));
     }

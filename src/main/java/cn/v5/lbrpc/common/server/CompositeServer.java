@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class CompositeServer {
     private static final Logger logger = LoggerFactory.getLogger(CompositeServer.class);
 
-    private final Map<Integer, IServer> serverMap = Maps.newHashMap();
+    private final Map<Integer, LifeCycleServer> serverMap = Maps.newHashMap();
 
     private final ServiceRegistration registration;
 
@@ -59,7 +59,7 @@ public class CompositeServer {
         if (port == -1) {
             port = AbstractServerFactory.newFactory(proto).getDefaultPort();
         }
-        IServer server = serverMap.get(port);
+        LifeCycleServer server = serverMap.get(port);
         if (server == null) {
             InetAddress address = InetAddress.getLocalHost();
             server = AbstractServerFactory.newFactory(proto).withRegistration(registration).withAddress(address).withPort(port).createServer(interceptors);
@@ -83,7 +83,7 @@ public class CompositeServer {
         if (port == -1) {
             port = AbstractServerFactory.newFactory(proto).getDefaultPort();
         }
-        IServer server = serverMap.get(port);
+        LifeCycleServer server = serverMap.get(port);
         if (server == null) {
             return;
         }
@@ -96,7 +96,7 @@ public class CompositeServer {
         if (!closing.compareAndSet(false, true)) {
             return;
         }
-        for (Map.Entry<Integer, IServer> serverEntry : serverMap.entrySet()) {
+        for (Map.Entry<Integer, LifeCycleServer> serverEntry : serverMap.entrySet()) {
             logger.info("close server listening at {} with supported proto {}", serverEntry.getKey(), serverEntry.getValue().getProto());
             serverEntry.getValue().unregister();
             serverEntry.getValue().stop();

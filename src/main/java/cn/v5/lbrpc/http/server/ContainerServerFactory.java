@@ -1,8 +1,7 @@
 package cn.v5.lbrpc.http.server;
 
 import cn.v5.lbrpc.common.server.AbstractServerFactory;
-import cn.v5.lbrpc.common.server.IServer;
-import cn.v5.lbrpc.common.server.ServerInterceptor;
+import cn.v5.lbrpc.common.server.LifeCycleServer;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -20,7 +19,7 @@ public class ContainerServerFactory extends AbstractServerFactory {
     }
 
     @Override
-    public IServer createServer(List<Object> interceptors) {
+    public LifeCycleServer createServer(List<Object> interceptors) {
         ContainerServer server = new ContainerServer(new InetSocketAddress(address, port), interceptors, registration, proto);
         return server;
     }
