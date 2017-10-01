@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by yangwei on 15-5-5.
@@ -15,6 +16,10 @@ public class PooledConnection<Request extends IRequest, Response extends IRespon
     private static final Logger logger = LoggerFactory.getLogger(DefaultResultFuture.class);
 
     final HostConnectionPool pool;
+
+    final AtomicReference<State> state = new AtomicReference<>(State.OPEN);
+
+    long expireTime;
 
     PooledConnection(String name, InetSocketAddress address, IPipelineAndHeartbeat<Request, Response> pipelineAndHearbeat,
                      Factory factory, HostConnectionPool pool) throws ConnectionException {
@@ -40,5 +45,9 @@ public class PooledConnection<Request extends IRequest, Response extends IRespon
             return;
 
         pool.closeAsync().force();
+    }
+
+    enum State {
+        OPEN, TRASHED, RESSURECTING, GONE;
     }
 }

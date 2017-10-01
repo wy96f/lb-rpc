@@ -49,6 +49,8 @@ public class Connection<Request extends IRequest, Response extends IResponse> im
     private volatile boolean isInitialized;
     private volatile boolean isDefunct;
 
+    protected AtomicInteger inFlight = new AtomicInteger();
+
     Connection(String name, InetSocketAddress address, IPipelineAndHeartbeat<Request, Response> pipelineAndHearbeat, Factory factory) throws ConnectionException {
         this.name = name;
         this.address = address;
