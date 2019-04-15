@@ -65,7 +65,8 @@ public class ThriftMessage implements Readable, Writerable, Cloneable, IResponse
             TMessage msg = protocol.readMessageBegin();
             streamId = msg.seqid;
             if (msg.type == TMessageType.EXCEPTION) {
-                x = TApplicationException.read(protocol);
+                x = new TApplicationException();
+                x.read(protocol);
                 protocol.readMessageEnd();
                 return;
             }
